@@ -16,7 +16,7 @@ AFFECTIVE_NORMS_GER_URL = "https://www.ims.uni-stuttgart.de/documents/ressourcen
 AFFECTIVE_NORMS_GER_FILE = "affective_norms.txt.gz"
 
 
-def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBEDDINGS_URL, languages = ['DE']):
+def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBEDDINGS_URL, languages = 'DE'):
     
     # name of zip
     embeddings_list = {
@@ -24,6 +24,9 @@ def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBE
         "FR": "fre-all_sgns",
         "DE": "ger-all_sgns"
     }
+
+    if isinstance(languages, str):
+        languages = [languages]
 
     for language in languages:
         embeddings_sub_folder = os.path.join(EMBEDDINGS_FOLDER, embeddings_list[language])
