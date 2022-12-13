@@ -39,7 +39,7 @@ def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENE
     # add concreteness = 10 - abstractness
     concreteness.eval(' `concreteness` = 10 - `AbstConc` ', inplace=True)
     # save the processed file as a pickle
-    concreteness.to_pickle(output_file)
+    concreteness.to_pickle(output_file[['concreteness']])
 
 
 def get_all_text_from_article(row):
