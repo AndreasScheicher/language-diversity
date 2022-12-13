@@ -17,61 +17,101 @@ AFFECTIVE_NORMS_GER_FILE = "affective_norms.txt.gz"
 
 
 def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBEDDINGS_URL, languages = 'DE'):
-    
-    # name of zip
+    """
+    Downloads the specified language's pre-trained word embeddings from EMBEDDINGS_URL and saves them to 
+    the specified EMBEDDINGS_FOLDER.
+
+    Parameters:
+        EMBEDDINGS_FOLDER (str): The path to the folder where the downloaded word embeddings will be saved.
+        EMBEDDINGS_URL (str): The URL where the word embeddings are hosted.
+        languages (str or list): A string or list of strings indicating which language's word embeddings to download.
+    """
+
+    # Define a dictionary mapping language codes to folder names
     embeddings_list = {
         "EN": "eng-all_sgns",
         "FR": "fre-all_sgns",
         "DE": "ger-all_sgns"
     }
 
+    # Convert the input language codes to a list if it is a string
     if isinstance(languages, str):
         languages = [languages]
 
+    # Iterate over the list of languages
     for language in languages:
+        # Create a subfolder for the language if it doesn't already exist
         embeddings_sub_folder = os.path.join(EMBEDDINGS_FOLDER, embeddings_list[language])
-
-        # create subfolder
         if not os.path.exists(embeddings_sub_folder):
             os.makedirs(embeddings_sub_folder)
         
+        # Download the zip file for the language
         embedding_zip = embeddings_list[language] + ".zip"
-
         wget.download(EMBEDDINGS_URL + embedding_zip)
         
-        # unzip
+        # Extract the files from the zip file to the subfolder
         with zipfile.ZipFile(embedding_zip, 'r') as zip_ref:
             zip_ref.extractall(embeddings_sub_folder)
         
+        # Delete the zip file
         os.remove(embedding_zip)
 
 
+
 def download_million_post_corpus(folder=DATA_FOLDER, url=MILLION_POST_CORPUS_URL, file=MILLION_POST_CORPUS_FILE):
-    
+    """
+    Downloads the Million Post Corpus and extracts it to the specified folder.
+
+    Args:
+        folder (str): The directory where the corpus will be extracted.
+        url (str): The URL where the corpus can be downloaded from.
+        file (str): The name of the corpus file.
+    """
+
+    # Create the target folder if it doesn't already exist
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+    # Download the corpus file
     wget.download(url + file)
 
+    # Extract the corpus from the downloaded tar file
     with tarfile.open(file, "r:bz2") as tar:
         tar.extractall(folder)
 
+    # Delete the tar file after extraction is complete
     os.remove(file)
 
 
 def download_affective_norms_ger(folder=AFFECTIVE_NORMS_GER_FOLDER, url=AFFECTIVE_NORMS_GER_URL, file=AFFECTIVE_NORMS_GER_FILE):
-    
+    """Downloads a file from a specified URL, unzips it, and saves it to a specified folder on the local filesystem.
+
+    Args:
+        folder: The local directory where the downloaded file should be saved.
+        url: The URL from which the file should be downloaded.
+        file: The file name.
+
+    Returns:
+        None
+    """
+    # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
-    
+
+    # Download the file using the wget module
     wget.download(url + file)
 
+    # Specify the output file name
     output_file = os.path.join(folder, file.rstrip('.gz'))
 
+    # Open the downloaded file with the gzip module
     with gzip.open(file, 'rb') as f:
+        # Open the output file in write binary mode
         with open(output_file, 'wb') as out:
+            # Write the unzipped file to the output file
             out.write(f.read())
 
+    # Remove the original zipped file
     os.remove(file)
 
 
