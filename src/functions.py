@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import igraph as ig
 from bs4 import BeautifulSoup
+from scipy.stats import linregress
 #import preprocess_datasets
 
 EMBEDDINGS_FOLDER = os.path.join("data", "external", "embeddings", "ger-all_sgns")
