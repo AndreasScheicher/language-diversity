@@ -4,6 +4,9 @@ import pandas as pd
 import pickle
 import sqlite3
 from bs4 import BeautifulSoup
+from sklearn.feature_extraction.text import CountVectorizer
+
+import functions
 
 # folders
 DATA_FOLDER = "data"
@@ -39,7 +42,7 @@ def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENE
     # add concreteness = 10 - abstractness
     concreteness.eval(' `concreteness` = 10 - `AbstConc` ', inplace=True)
     # save the processed file as a pickle
-    concreteness.to_pickle(output_file[['concreteness']])
+    concreteness[['concreteness']].to_pickle(output_file)
 
 
 def get_all_text_from_article(row):
@@ -72,13 +75,18 @@ def get_all_text_from_article(row):
 
 def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, output_folder=OUTPUT_FOLDER):
     """
-    This function processes the data from the Posts and Articles tables in the provided Million Posts database,
-    joins the text from all posts and articles, and saves the processed data to a pickle file.
+    Processes data from the Posts and Articles tables in the provided Million Posts database,
+    joins the text from all posts and articles, creates the ratio of word frequencies in posts and articles
+    and saves the processed data to a pickle file.
+    This ratio is supposed to be used as a proxy for the word use in non-conform contexts.
 
-    Inputs:
-        folder: the directory where the Million Posts database is stored (default MILLION_POSTS_FOLDER)
-        database: the name of the Million Posts database file (default CORPUSDB)
+    Args:
+        folder: str, the directory where the Million Posts database is stored
+        database: str, the name of the Million Posts database file
+        output_folder: str, the directory where the output pickle file will be saved
     """
+    output_file = os.path.join(output_folder, "non-conformity_ger.pkl")
+
     # connect to the database and read the posts and articles tables to dataframes
     database = os.path.join(folder, database)
     with sqlite3.connect(database) as con:
@@ -96,13 +104,26 @@ def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, out
     articles['text'] = articles.apply(lambda row: get_all_text_from_article(row), axis=1)
     # join all articles
     joined_articles = ' '.join(articles['text'])
-    
-    # save to pickles
-    with open(os.path.join(output_folder,'posts.pkl'), 'wb') as posts_pickle:
-        pickle.dump(joined_posts, posts_pickle)
 
-    with open(os.path.join(output_folder,'articles.pkl'), 'wb') as articles_pickle:
-        pickle.dump(joined_articles, articles_pickle)
+    # use the words from the embeddings as vocabulary
+    vocabulary = functions.get_vocab_from_embeddings()
+    
+    # get word frequencies of posts and articles
+    texts = [joined_posts, joined_articles]
+    cv = CountVectorizer(vocabulary=vocabulary)
+    cv_fit = cv.fit_transform(texts)
+
+    # scipy csr matrix to numpy array
+    freq = cv_fit.todense()
+
+    # log of freqency ratio
+    non_conf = pd.DataFrame(np.array(np.log(freq[0] / freq[1]))[0], index=vocabulary, columns=['non-conformity'])
+
+    # drop na and inf
+    with pd.option_context('mode.use_inf_as_na', True):
+        non_conf.dropna(inplace=True)
+
+    non_conf.to_pickle(output_file)
     
 
 if __name__ == "__main__":
