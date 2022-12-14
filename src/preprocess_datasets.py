@@ -5,6 +5,7 @@ import pickle
 import sqlite3
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 import functions
 
@@ -126,6 +127,58 @@ def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, out
     non_conf.to_pickle(output_file)
     
 
+def get_clustering_coeff_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, verbose = False):
+    """
+    Calculate the clustering coefficients for words in a given range of years, and save the results to a file.
+
+    This function performs the following steps for each year in the specified range:
+        1. Loads the matrix and vocabulary for the current year
+        2. Removes empty words from the matrix and vocabulary
+        3. Calculates the cosine similarity for the reduced matrix
+        4. Calculates the clustering coefficient for the cosine similarity and reduced matrix
+        5. Stores the results in a dataframe
+    Finally, the dataframe containing all of the results is saved to a file.
+
+    Parameters:
+        start_year (int): The starting year (inclusive) to calculate clustering coefficients for.
+        end_year (int): The ending year (exclusive) to calculate clustering coefficients for.
+        folder (str): The folder where the output file should be saved.
+        verbose (bool): If True, print status messages.
+    """
+    # define the output file path
+    output_file = os.path.join(folder, 'clustering_coeff_years.pkl')
+    
+    # iterate the years
+    for year in range(start_year, end_year+10, 10):
+        if verbose: print("Year:", year)
+        # Load the matrix and vocabulary for the current year
+        mat = functions.load_mat(year)
+        vocab = functions.load_vocab(year)
+        # Check the ratio of non-zero vectors in the matrix for understanding the sparsity of the data
+        if verbose: print("Ratio of non-zero vectors:", functions.check_sparcity(mat))
+        # Reduce the matrix and vocabulary to remove empty words (that have a zero vector in the matrix)
+        reduced_mat, reduced_vocab = functions.remove_empty_words(mat, vocab)
+        # Calculate the cosine similarity between all word-vectors in the reduced matrix
+        cos_sim = cosine_similarity(reduced_mat)
+        # Calculate the clustering coefficient for each word in the reduced vocabulary
+        transitivities = functions.get_clustering_coefficient(cos_sim, reduced_mat, verbose=verbose)
+
+        # Create a DataFrame that holds the clustering coefficients for each year
+        clustering = pd.DataFrame(data=transitivities, index=reduced_vocab, columns=[f"clustering_coeff_{year}"])
+
+        # If a DataFrame for the clustering coefficients over the years already exists,
+        # merge the current year's clustering coefficients with the existing DataFrame.
+        # Otherwise, create a new DataFrame with the current year's clustering coefficients.
+        if 'clustering_coeff_years' in locals():
+            clustering_coeff_years = pd.merge(left=clustering_coeff_years, right=clustering, 
+                                              left_index=True, right_index=True, how='inner')
+        else:
+            clustering_coeff_years = clustering
+
+    # save the resulting dataframe to a pickle
+    clustering_coeff_years.to_pickle(output_file)
+
 if __name__ == "__main__":
-    process_ger_concreteness()
-    process_non_conformity()
+    #process_ger_concreteness()
+    #process_non_conformity()
+    get_clustering_coeff_evolution()
