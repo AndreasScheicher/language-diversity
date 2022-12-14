@@ -9,25 +9,41 @@ from scipy.stats import linregress
 
 EMBEDDINGS_FOLDER = os.path.join("data", "external", "embeddings", "ger-all_sgns")
 
+# load the embeddings
 def load_mat(year=1990, path=EMBEDDINGS_FOLDER):
     file = os.path.join(path, str(year) + "-w.npy") 
     return np.load(file, mmap_mode="c")
 
-
+# load the embeddings vocabulary
 def load_vocab(year=1990, path=EMBEDDINGS_FOLDER):
     file = os.path.join(path, str(year) + "-vocab.pkl")
     with open(file, 'rb') as f:
         return pickle.load(f)
 
-
-
+# check the sparcity of the embeddings matrix: number of word vectors that contain non-zero elements
 def check_sparcity(m):
     return sum(m.any(axis=1)) / m.shape[0]
 
 
 def remove_empty_words(mat, vocab):
+    """
+    Remove empty words from a matrix and a corresponding vocabulary.
+    
+    Args:
+        mat: A 2D NumPy array of shape (m, n) where m is the number of words in the vocabulary and n is the size of the embedding vector.
+        vocab: A 1D NumPy array of shape (m,) containing the words in the vocabulary.
+    
+    Returns:
+        A tuple (reduced_mat, reduced_vocab) where reduced_mat is a 2D NumPy array of shape (m', n) with m' < m, 
+        containing the words in the vocabulary that are not empty, and reduced_vocab is a 1D NumPy array of shape (m',)
+        containing the corresponding words.
+    
+    """
+    # Find the columns  that contain at least one non-zero element
     filled_columns = mat.any(axis=1)
+    # Delete the columns that do not contain any non-zero element
     reduced_mat = np.delete(mat, ~filled_columns, axis=0)
+    # Select the words in the vocabulary that correspond to the columns that contain at least one non-zero element
     reduced_vocab = np.array(vocab)[filled_columns]
     return reduced_mat, reduced_vocab
 
@@ -58,11 +74,34 @@ def get_clustering_coefficient(cos_sim, reduced_mat, verbose=False):
 
 
 def get_vocab_from_embeddings(start_year=1950, end_year=1990):
+    """
+    Collects all the words from the vocabularly lists for a range of years.
+    
+    This function takes in two optional arguments: `start_year` and `end_year`. The default values for these arguments are 1950 and 1990, respectively. The function iterates over the range of years from `start_year` to `end_year` in increments of 10 and collects all the words from the vocabularly lists for these years. It then returns a list of all the words that appeared in any of the vocabularly lists.
+    
+    Args:
+        start_year: An integer representing the first year to include in the range of years.
+        end_year: An integer representing the last year to include in the range of years.
+    
+    Returns:
+        A list of all the words that appeared in any of the vocabularly lists for the specified range of years.
+    """
+    
+    # Create an empty set to store the vocabularly
     all_vocab = set()
+    
+    # Iterate over the range of years
     for year in range(start_year, end_year+10, 10):
-        v = set(load_vocab())
-        all_vocab = all_vocab.union(v)
+        
+        # Load the vocabularly for the current year
+        vocabulary = set(load_vocab())
+        
+        # Add the words in this vocabularly to the set of all words
+        all_vocab = all_vocab.union(vocabulary)
+    
+    # Convert the set of all words to a list and return it
     return list(all_vocab)
+
 
 
 def get_slope_of_clustering_coeff(clustering_coeff_df: pd.DataFrame) -> float:
