@@ -15,11 +15,13 @@ INPUT_FOLDER = os.path.join(DATA_FOLDER, "external")
 OUTPUT_FOLDER = os.path.join(DATA_FOLDER, "processed")
 EMBEDDINGS_FOLDER = os.path.join(INPUT_FOLDER, "embeddings", "ger-all_sgns")
 CONCRETENESS_FOLDER = os.path.join(INPUT_FOLDER, "affective_norms")
+CONCRETENESS_FOLDER_EN = os.path.join(INPUT_FOLDER, "concreteness_ratings_en")
 MILLION_POSTS_FOLDER = os.path.join(INPUT_FOLDER, "million_post_corpus")
 
 # filenames
 CORPUSDB = "corpus.sqlite3"
 CONCRETENESS_FILE = "affective_norms.txt"
+CONCRETENESS_FILE_EN = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
 
 
 def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENESS_FILE, output = OUTPUT_FOLDER, all_lower_case = True):
@@ -33,8 +35,8 @@ def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENE
         all_lower_case: a boolean indicating whether to convert all words to lower case
     """
     # create the path to the output file and to the concreteness ratings file
-    output_file = os.path.join(OUTPUT_FOLDER, "concreteness_ger.pkl")
-    concreteness_file = os.path.join(CONCRETENESS_FOLDER, filename)
+    output_file = os.path.join(output, "concreteness_ger.pkl")
+    concreteness_file = os.path.join(folder, filename)
     # read in the concreteness ratings file
     concreteness = pd.read_csv(concreteness_file, sep='\t', index_col='Word')
     if all_lower_case:
@@ -127,12 +129,12 @@ def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, out
     non_conf.to_pickle(output_file)
     
 
-def get_clustering_coeff_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, verbose = False):
+def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, verbose = False, percentile=90):
     """
-    Calculate the clustering coefficients for words in a given range of years, and save the results to a file.
+    Calculate the clustering coefficients for words in a given range of years, and save the results to a pickle.
 
-    This function performs the following steps for each year in the specified range:
-        1. Loads the matrix and vocabulary for the current year
+    This function performs the following steps for each decade in the specified range:
+        1. Loads the matrix and vocabulary for the current decade
         2. Removes empty words from the matrix and vocabulary
         3. Calculates the cosine similarity for the reduced matrix
         4. Calculates the clustering coefficient for the cosine similarity and reduced matrix
@@ -146,7 +148,7 @@ def get_clustering_coeff_evolution(start_year = 1950, end_year = 1990, folder=OU
         verbose (bool): If True, print status messages.
     """
     # define the output file path
-    output_file = os.path.join(folder, 'clustering_coeff_years.pkl')
+    output_file = os.path.join(folder, 'polysemy_score_years.pkl')
     
     # iterate the years
     for year in range(start_year, end_year+10, 10):
@@ -161,24 +163,36 @@ def get_clustering_coeff_evolution(start_year = 1950, end_year = 1990, folder=OU
         # Calculate the cosine similarity between all word-vectors in the reduced matrix
         cos_sim = cosine_similarity(reduced_mat)
         # Calculate the clustering coefficient for each word in the reduced vocabulary
-        transitivities = functions.get_clustering_coefficient(cos_sim, reduced_mat, verbose=verbose)
-
+        transitivities = functions.get_clustering_coefficient(cos_sim, reduced_mat, verbose=verbose, percentile=percentile)
+        # get polysemy as 1 - transitivity
+        polysemy_score = [1 - transitivity for transitivity in transitivities]
         # Create a DataFrame that holds the clustering coefficients for each year
-        clustering = pd.DataFrame(data=transitivities, index=reduced_vocab, columns=[f"clustering_coeff_{year}"])
+        current_polysemy_score = pd.DataFrame(data=polysemy_score, index=reduced_vocab, columns=[f"polysemy_score_{year}"])
 
         # If a DataFrame for the clustering coefficients over the years already exists,
         # merge the current year's clustering coefficients with the existing DataFrame.
         # Otherwise, create a new DataFrame with the current year's clustering coefficients.
-        if 'clustering_coeff_years' in locals():
-            clustering_coeff_years = pd.merge(left=clustering_coeff_years, right=clustering, 
+        if 'polysemy_score_years' in locals():
+            polysemy_score_years = pd.merge(left=polysemy_score_years, right=current_polysemy_score, 
                                               left_index=True, right_index=True, how='inner')
         else:
-            clustering_coeff_years = clustering
+            polysemy_score_years = current_polysemy_score
 
     # save the resulting dataframe to a pickle
-    clustering_coeff_years.to_pickle(output_file)
+    polysemy_score_years.to_pickle(output_file)
+
+def process_en_concreteness(folder = CONCRETENESS_FOLDER_EN, filename = CONCRETENESS_FILE_EN, output = OUTPUT_FOLDER):
+
+    # create the path to the output file and to the concreteness ratings file
+    output_file = os.path.join(output, "concreteness_en.pkl")
+
+    concreteness = pd.read_csv('data/external/concreteness_ratings_en/Concreteness_ratings_Brysbaert_et_al_BRM.txt', 
+                           sep='\t', usecols=['Word', 'Conc.M'], index_col='Word')
+    
+    concreteness.to_pickle(output_file)
 
 if __name__ == "__main__":
     #process_ger_concreteness()
     #process_non_conformity()
-    get_clustering_coeff_evolution()
+    #get_polysemy_score_evolution(percentile=90)
+    process_en_concreteness()
