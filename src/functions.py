@@ -48,23 +48,25 @@ def remove_empty_words(mat, vocab):
     return reduced_mat, reduced_vocab
 
 
-def get_clustering_coefficient(cos_sim, reduced_mat, verbose=False):
+def get_clustering_coefficient(cos_sim, reduced_mat, verbose=False, percentile=90):
     # process for graph
-    cutoff_value = np.percentile(cos_sim - np.diag(np.diag(cos_sim)), 90)
+    cutoff_value = np.percentile(cos_sim - np.diag(np.diag(cos_sim)), percentile)
     if verbose: print("Cutoff value:", cutoff_value)
     # triangle matrix for removing duplicate cosine similiarities
     triangle = np.tri(cos_sim.shape[0], cos_sim.shape[1], -1)
     # set duplicates and below cutoff value to zero
-    above_thresh = np.where(cos_sim >= cutoff_value, cos_sim * triangle, np.zeros(cos_sim.shape))
+    #above_thresh = np.where(cos_sim >= cutoff_value, cos_sim * triangle, np.zeros(cos_sim.shape))
+    above_thresh = np.where(cos_sim >= cutoff_value, triangle, np.zeros(cos_sim.shape))
     # get indices of non-zero values
     indices = np.nonzero(above_thresh)
     # indices should contain ~5% of the cosine similarity matrix
     if verbose: print("Ratio elements above cutoff value", indices[0].shape[0] / ( cos_sim.shape[0] * cos_sim.shape[1] ))
 
     # create graph
-    n_vertices = reduced_mat.shape[0]
-    edges = [(a, b) for a, b in zip(indices[0], indices[1])]
-    g = ig.Graph(n_vertices, edges, directed=False)
+    #n_vertices = reduced_mat.shape[0]
+    #edges = [(a, b) for a, b in zip(indices[0], indices[1])]
+    #g = ig.Graph(n_vertices, edges, directed=False)
+    g = ig.Graph.Adjacency(above_thresh, mode='lower')
     # get clutering coeff
     transitivities = g.transitivity_local_undirected()
     
