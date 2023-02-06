@@ -15,13 +15,13 @@ INPUT_FOLDER = os.path.join(DATA_FOLDER, "external")
 OUTPUT_FOLDER = os.path.join(DATA_FOLDER, "processed")
 EMBEDDINGS_FOLDER = os.path.join(INPUT_FOLDER, "embeddings", "ger-all_sgns")
 CONCRETENESS_FOLDER = os.path.join(INPUT_FOLDER, "affective_norms")
-CONCRETENESS_FOLDER_EN = os.path.join(INPUT_FOLDER, "concreteness_ratings_en")
+CONCRETENESS_FOLDER_ENG = os.path.join(INPUT_FOLDER, "concreteness_ratings_eng")
 MILLION_POSTS_FOLDER = os.path.join(INPUT_FOLDER, "million_post_corpus")
 
 # filenames
 CORPUSDB = "corpus.sqlite3"
 CONCRETENESS_FILE = "affective_norms.txt"
-CONCRETENESS_FILE_EN = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
 
 
 def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENESS_FILE, output = OUTPUT_FOLDER, all_lower_case = True):
@@ -181,18 +181,30 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
     # save the resulting dataframe to a pickle
     polysemy_score_years.to_pickle(output_file)
 
-def process_eng_concreteness(folder = CONCRETENESS_FOLDER_EN, filename = CONCRETENESS_FILE_EN, output = OUTPUT_FOLDER):
+def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRETENESS_FILE_ENG, output = OUTPUT_FOLDER):
 
     # create the path to the output file and to the concreteness ratings file
-    output_file = os.path.join(output, "concreteness_en.pkl")
+    output_file = os.path.join(output, "concreteness_eng.pkl")
+    input_file = os.path.join(folder, filename)
 
-    concreteness = pd.read_csv('data/external/concreteness_ratings_en/Concreteness_ratings_Brysbaert_et_al_BRM.txt', 
-                           sep='\t', usecols=['Word', 'Conc.M'], index_col='Word')
+    concreteness = pd.read_csv(input_file, sep='\t', index_col='Word')
+
+    # lower amount of 
+    concreteness = concreteness[concreteness['Percent_known'] == 1]
     
-    concreteness.to_pickle(output_file)
+    # filter type of words
+    Dom_Pos = ['Noun', 'Adjective', 'Verb', 'Adverb']
+    concreteness = concreteness[concreteness['Dom_Pos'].isin(Dom_Pos)]
+    
+    # remove bigrams
+    concreteness = concreteness[concreteness['Bigram'] == 0]
+
+    concreteness.rename(columns={'Conc.M': 'concreteness'}, inplace=True)
+    concreteness[['concreteness']].to_pickle(output_file)
 
 if __name__ == "__main__":
     #process_ger_concreteness()
     #process_non_conformity()
     #get_polysemy_score_evolution(percentile=90)
-    process_eng_concreteness()
+    #process_eng_concreteness()
+    pass
