@@ -181,7 +181,7 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
     # save the resulting dataframe to a pickle
     polysemy_score_years.to_pickle(output_file)
 
-def process_en_concreteness(folder = CONCRETENESS_FOLDER_EN, filename = CONCRETENESS_FILE_EN, output = OUTPUT_FOLDER):
+def process_eng_concreteness(folder = CONCRETENESS_FOLDER_EN, filename = CONCRETENESS_FILE_EN, output = OUTPUT_FOLDER):
 
     # create the path to the output file and to the concreteness ratings file
     output_file = os.path.join(output, "concreteness_en.pkl")
@@ -195,4 +195,4 @@ if __name__ == "__main__":
     #process_ger_concreteness()
     #process_non_conformity()
     #get_polysemy_score_evolution(percentile=90)
-    process_en_concreteness()
+    process_eng_concreteness()

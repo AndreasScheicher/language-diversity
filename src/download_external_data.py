@@ -136,7 +136,7 @@ def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_EN, 
     os.remove(file)
 
 
-def download_concreteness_en(folder=CONCRETENESS_RATINGS_EN, url=CONCRETENESS_RATINGS_EN_URL):
+def download_concreteness_eng(folder=CONCRETENESS_RATINGS_EN, url=CONCRETENESS_RATINGS_EN_URL):
     # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -150,5 +150,5 @@ if __name__ == "__main__":
     #download_embeddings()
     #download_affective_norms_ger()
     #download_corpus_historical_american_english()
-    #download_concreteness_en()
+    #download_concreteness_eng()
     pass
