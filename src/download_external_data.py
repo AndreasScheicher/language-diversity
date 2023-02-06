@@ -8,17 +8,17 @@ import gzip
 DATA_FOLDER = os.path.join("data", "external")
 EMBEDDINGS_FOLDER = os.path.join(DATA_FOLDER, "embeddings")
 AFFECTIVE_NORMS_GER_FOLDER = os.path.join(DATA_FOLDER, "affective_norms")
-CORPUS_HISTORICAL_AM_EN = os.path.join(DATA_FOLDER, "historical_american_english")
-CONCRETENESS_RATINGS_EN = os.path.join(DATA_FOLDER, "concreteness_ratings_en")
+CORPUS_HISTORICAL_AM_ENG = os.path.join(DATA_FOLDER, "historical_american_english")
+CONCRETENESS_RATINGS_ENG = os.path.join(DATA_FOLDER, "concreteness_ratings_en")
 
 EMBEDDINGS_URL = "http://snap.stanford.edu/historical_embeddings/"
 MILLION_POST_CORPUS_URL = "https://github.com/OFAI/million-post-corpus/releases/download/v1.0.0/"
 MILLION_POST_CORPUS_FILE = "million_post_corpus.tar.bz2"
 AFFECTIVE_NORMS_GER_URL = "https://www.ims.uni-stuttgart.de/documents/ressourcen/experiment-daten/"
 AFFECTIVE_NORMS_GER_FILE = "affective_norms.txt.gz"
-CORPUS_HISTORICAL_AM_EN_URL = "http://vectors.nlpl.eu/repository/20/"
-CORPUS_HISTORICAL_AM_EN_FILE = "188.zip"
-CONCRETENESS_RATINGS_EN_URL = "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+CORPUS_HISTORICAL_AM_ENG_URL = "http://vectors.nlpl.eu/repository/20/"
+CORPUS_HISTORICAL_AM_ENG_FILE = "188.zip"
+CONCRETENESS_RATINGS_ENG_URL = "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt"
 
 
 def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBEDDINGS_URL, languages = 'DE'):
@@ -120,7 +120,7 @@ def download_affective_norms_ger(folder=AFFECTIVE_NORMS_GER_FOLDER, url=AFFECTIV
     os.remove(file)
 
 
-def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_EN, url=CORPUS_HISTORICAL_AM_EN_URL, file=CORPUS_HISTORICAL_AM_EN_FILE):
+def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_ENG, url=CORPUS_HISTORICAL_AM_ENG_URL, file=CORPUS_HISTORICAL_AM_ENG_FILE):
     # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -136,7 +136,7 @@ def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_EN, 
     os.remove(file)
 
 
-def download_concreteness_eng(folder=CONCRETENESS_RATINGS_EN, url=CONCRETENESS_RATINGS_EN_URL):
+def download_concreteness_eng(folder=CONCRETENESS_RATINGS_ENG, url=CONCRETENESS_RATINGS_ENG_URL):
     # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
