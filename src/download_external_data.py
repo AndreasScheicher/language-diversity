@@ -133,7 +133,7 @@ def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_EN, 
         zip_ref.extractall(folder)
         
     # Delete the zip file
-    #os.remove(embedding_zip)
+    os.remove(file)
 
 
 def download_concreteness_en(folder=CONCRETENESS_RATINGS_EN, url=CONCRETENESS_RATINGS_EN_URL):
@@ -149,5 +149,6 @@ if __name__ == "__main__":
     #download_million_post_corpus()
     #download_embeddings()
     #download_affective_norms_ger()
-    download_corpus_historical_american_english()
+    #download_corpus_historical_american_english()
     #download_concreteness_en()
+    pass
