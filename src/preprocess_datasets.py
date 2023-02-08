@@ -22,6 +22,7 @@ MILLION_POSTS_FOLDER = os.path.join(INPUT_FOLDER, "million_post_corpus")
 CORPUSDB = "corpus.sqlite3"
 CONCRETENESS_FILE = "affective_norms.txt"
 CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+CONCRETENESS_PICKLE_ENG = "concreteness_eng.pkl"
 
 
 def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENESS_FILE, output = OUTPUT_FOLDER, all_lower_case = True):
@@ -43,7 +44,8 @@ def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENE
         # change all words to lower case, this results in duplicates (eg noun and verb)
         concreteness.index = concreteness.index.str.lower()
     # add concreteness = 10 - abstractness
-    concreteness.eval(' `concreteness` = 10 - `AbstConc` ', inplace=True)
+    #concreteness.eval(' `concreteness` = 10 - `AbstConc` ', inplace=True)
+    concreteness.eval(' `concreteness` = `AbstConc` ', inplace=True)
     # save the processed file as a pickle
     concreteness[['concreteness']].to_pickle(output_file)
 
@@ -129,7 +131,8 @@ def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, out
     non_conf.to_pickle(output_file)
     
 
-def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, verbose = False, percentile=90):
+def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, language = 'ger',
+                                 vocabulary = None, verbose = False, percentile=90):
     """
     Calculate the clustering coefficients for words in a given range of years, and save the results to a pickle.
 
@@ -148,18 +151,27 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
         verbose (bool): If True, print status messages.
     """
     # define the output file path
-    output_file = os.path.join(folder, 'polysemy_score_years.pkl')
+    output_file = os.path.join(folder, f'polysemy_score_years_{language}.pkl')
     
+    embeddings_list = {
+        "eng": os.path.join("eng-all_sgns", "sgns"),
+        "fra": "fre-all_sgns",
+        "ger": "ger-all_sgns"
+    }
+
     # iterate the years
     for year in range(start_year, end_year+10, 10):
         if verbose: print("Year:", year)
         # Load the matrix and vocabulary for the current year
-        mat = functions.load_mat(year)
-        vocab = functions.load_vocab(year)
+        mat = functions.load_mat(year, language_folder=embeddings_list[language])
+        vocab = functions.load_vocab(year, language_folder=embeddings_list[language])
         # Check the ratio of non-zero vectors in the matrix for understanding the sparsity of the data
         if verbose: print("Ratio of non-zero vectors:", functions.check_sparcity(mat))
         # Reduce the matrix and vocabulary to remove empty words (that have a zero vector in the matrix)
         reduced_mat, reduced_vocab = functions.remove_empty_words(mat, vocab)
+
+        if vocabulary is not None:
+            reduced_mat, reduced_vocab = functions.reduce_to_list_of_words(reduced_mat, reduced_vocab, vocabulary)
         # Calculate the cosine similarity between all word-vectors in the reduced matrix
         cos_sim = cosine_similarity(reduced_mat)
         # Calculate the clustering coefficient for each word in the reduced vocabulary
@@ -181,10 +193,48 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
     # save the resulting dataframe to a pickle
     polysemy_score_years.to_pickle(output_file)
 
-def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRETENESS_FILE_ENG, output = OUTPUT_FOLDER):
+
+def get_polysemy_score_evolution_eng(start_year = 1960, end_year = 2000, folder = OUTPUT_FOLDER, input_folder = INPUT_FOLDER,
+                                     concreteness_filename = CONCRETENESS_PICKLE_ENG, verbose = False, percentile=90):
+
+    # define the output file path
+    output_file = os.path.join(folder, 'polysemy_score_years_eng.pkl')
+
+    concreteness = pd.read_pickle(os.path.join(folder, concreteness_filename))
+
+    for year in range(start_year, end_year+10, 10):
+        if verbose:
+            print(f'current year: {year}')
+
+        # read embeddings of year
+        file = os.path.join(input_folder, 'historical_american_english', f'{year}.txt')
+        df = pd.read_csv(file, skiprows=1, sep=' ', header=None, index_col=0)
+        df.index = df.index.str.split('_').str[0]
+        # filter for words in concreteness
+        df = df[df.index.isin(concreteness.index)]
+        # remove duplicates
+        df = df[~df.index.duplicated(keep='first')]
+        # get polysemy score from cosine similarity
+        cos_sim = cosine_similarity(df)
+        transitivities = functions.get_clustering_coefficient(cos_sim, df.index, verbose=verbose, percentile=percentile)
+        polysemy_score = [1 - transitivity for transitivity in transitivities]
+        # create dataframe from polysemy score
+        current_polysemy_score = pd.DataFrame(data=polysemy_score, index=df.index, columns=[f'polysemy_score_{year}'])
+        # add current result to dataframe
+        if 'polysemy_score_years_eng' in locals():
+            polysemy_score_years_eng = pd.merge(left=polysemy_score_years_eng, right=current_polysemy_score, 
+                                              left_index=True, right_index=True, how='inner')
+        else:
+            polysemy_score_years_eng = current_polysemy_score
+    # save result to pickle
+    polysemy_score_years_eng.to_pickle(output_file)
+
+
+def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRETENESS_FILE_ENG, 
+                             output = OUTPUT_FOLDER, output_filename = CONCRETENESS_PICKLE_ENG):
 
     # create the path to the output file and to the concreteness ratings file
-    output_file = os.path.join(output, "concreteness_eng.pkl")
+    output_file = os.path.join(output, output_filename)
     input_file = os.path.join(folder, filename)
 
     concreteness = pd.read_csv(input_file, sep='\t', index_col='Word')
@@ -203,8 +253,11 @@ def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRE
     concreteness[['concreteness']].to_pickle(output_file)
 
 if __name__ == "__main__":
-    #process_ger_concreteness()
+    process_ger_concreteness()
     #process_non_conformity()
-    #get_polysemy_score_evolution(percentile=90)
+    #get_polysemy_score_evolution(percentile=80, verbose=True)
+    #get_polysemy_score_evolution(language='eng', percentile=90, verbose=True, 
+    #                             vocabulary=pd.read_pickle(os.path.join('data', 'processed', 'concreteness_eng.pkl')).index)
+    #get_polysemy_score_evolution_eng(percentile=90)
     #process_eng_concreteness()
     pass
