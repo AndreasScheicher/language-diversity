@@ -147,7 +147,7 @@ def download_concreteness_eng(folder=CONCRETENESS_RATINGS_ENG, url=CONCRETENESS_
 
 if __name__ == "__main__":
     #download_million_post_corpus()
-    #download_embeddings()
+    download_embeddings(languages = 'EN')
     #download_affective_norms_ger()
     #download_corpus_historical_american_english()
     #download_concreteness_eng()
