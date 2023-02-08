@@ -7,16 +7,17 @@ from bs4 import BeautifulSoup
 from scipy.stats import linregress
 #import preprocess_datasets
 
-EMBEDDINGS_FOLDER = os.path.join("data", "external", "embeddings", "ger-all_sgns")
+EMBEDDINGS_FOLDER = os.path.join("data", "external", "embeddings")
+LANGUAGE_FOLDER = "ger-all_sgns"
 
 # load the embeddings
-def load_mat(year=1990, path=EMBEDDINGS_FOLDER):
-    file = os.path.join(path, str(year) + "-w.npy") 
+def load_mat(year=1990, path=EMBEDDINGS_FOLDER, language_folder=LANGUAGE_FOLDER):
+    file = os.path.join(path, language_folder, f"{year}-w.npy") 
     return np.load(file, mmap_mode="c")
 
 # load the embeddings vocabulary
-def load_vocab(year=1990, path=EMBEDDINGS_FOLDER):
-    file = os.path.join(path, str(year) + "-vocab.pkl")
+def load_vocab(year=1990, path=EMBEDDINGS_FOLDER, language_folder=LANGUAGE_FOLDER):
+    file = os.path.join(path, language_folder, f"{year}-vocab.pkl")
     with open(file, 'rb') as f:
         return pickle.load(f)
 
@@ -47,16 +48,25 @@ def remove_empty_words(mat, vocab):
     reduced_vocab = np.array(vocab)[filled_columns]
     return reduced_mat, reduced_vocab
 
+def reduce_to_list_of_words(mat, vocab, list_of_words):
+    keep_words = [word in list_of_words for word in vocab]
+    reduced_mat = np.delete(mat, ~np.array(keep_words), axis=0)
+    reduced_vocab = vocab[keep_words]
+    return reduced_mat, reduced_vocab
+    
 
 def get_clustering_coefficient(cos_sim, reduced_mat, verbose=False, percentile=90):
     # process for graph
-    cutoff_value = np.percentile(cos_sim - np.diag(np.diag(cos_sim)), percentile)
+    #cutoff_value = np.percentile(cos_sim - np.diag(np.diag(cos_sim)), percentile)
+    np.fill_diagonal(cos_sim, 0.)
+    cutoff_value = np.percentile(cos_sim, percentile)
     if verbose: print("Cutoff value:", cutoff_value)
     # triangle matrix for removing duplicate cosine similiarities
-    triangle = np.tri(cos_sim.shape[0], cos_sim.shape[1], -1)
+    #triangle = np.tri(cos_sim.shape[0], cos_sim.shape[1], -1)
     # set duplicates and below cutoff value to zero
     #above_thresh = np.where(cos_sim >= cutoff_value, cos_sim * triangle, np.zeros(cos_sim.shape))
-    above_thresh = np.where(cos_sim >= cutoff_value, triangle, np.zeros(cos_sim.shape))
+    #above_thresh = np.where(cos_sim >= cutoff_value, triangle, np.zeros(cos_sim.shape))
+    above_thresh = np.where(cos_sim >= cutoff_value, 1, 0)
     # get indices of non-zero values
     indices = np.nonzero(above_thresh)
     # indices should contain ~5% of the cosine similarity matrix
