@@ -3,20 +3,20 @@ import pickle
 import numpy as np
 import pandas as pd
 import igraph as ig
-from bs4 import BeautifulSoup
 from scipy.stats import linregress
-#import preprocess_datasets
 
+# define folders and default values
 EMBEDDINGS_FOLDER = os.path.join("data", "external", "embeddings")
-LANGUAGE_FOLDER = "ger-all_sgns"
+DEFAULT_LANGUAGE_FOLDER = "ger-all_sgns"
+DEFAULT_YEAR = 1990
 
 # load the embeddings
-def load_mat(year=1990, path=EMBEDDINGS_FOLDER, language_folder=LANGUAGE_FOLDER):
+def load_mat(year=DEFAULT_YEAR, path=EMBEDDINGS_FOLDER, language_folder=DEFAULT_LANGUAGE_FOLDER):
     file = os.path.join(path, language_folder, f"{year}-w.npy") 
     return np.load(file, mmap_mode="c")
 
 # load the embeddings vocabulary
-def load_vocab(year=1990, path=EMBEDDINGS_FOLDER, language_folder=LANGUAGE_FOLDER):
+def load_vocab(year=DEFAULT_YEAR, path=EMBEDDINGS_FOLDER, language_folder=DEFAULT_LANGUAGE_FOLDER):
     file = os.path.join(path, language_folder, f"{year}-vocab.pkl")
     with open(file, 'rb') as f:
         return pickle.load(f)
@@ -56,30 +56,20 @@ def reduce_to_list_of_words(mat, vocab, list_of_words):
     
 
 def get_clustering_coefficient(cos_sim, reduced_mat, verbose=False, percentile=90):
-    # process for graph
-    #cutoff_value = np.percentile(cos_sim - np.diag(np.diag(cos_sim)), percentile)
+    # find cos_sim cutoff value, depending on percentile 
     np.fill_diagonal(cos_sim, 0.)
     cutoff_value = np.percentile(cos_sim, percentile)
     if verbose: print("Cutoff value:", cutoff_value)
-    # triangle matrix for removing duplicate cosine similiarities
-    #triangle = np.tri(cos_sim.shape[0], cos_sim.shape[1], -1)
-    # set duplicates and below cutoff value to zero
-    #above_thresh = np.where(cos_sim >= cutoff_value, cos_sim * triangle, np.zeros(cos_sim.shape))
-    #above_thresh = np.where(cos_sim >= cutoff_value, triangle, np.zeros(cos_sim.shape))
+    # create adjacency matric
     above_thresh = np.where(cos_sim >= cutoff_value, 1, 0)
     # get indices of non-zero values
     indices = np.nonzero(above_thresh)
-    # indices should contain ~5% of the cosine similarity matrix
+    # check if number of indices match percentile
     if verbose: print("Ratio elements above cutoff value", indices[0].shape[0] / ( cos_sim.shape[0] * cos_sim.shape[1] ))
-
-    # create graph
-    #n_vertices = reduced_mat.shape[0]
-    #edges = [(a, b) for a, b in zip(indices[0], indices[1])]
-    #g = ig.Graph(n_vertices, edges, directed=False)
+    # create graph from adjacency matrix
     g = ig.Graph.Adjacency(above_thresh, mode='lower')
     # get clutering coeff
     transitivities = g.transitivity_local_undirected()
-    
     return transitivities
 
 

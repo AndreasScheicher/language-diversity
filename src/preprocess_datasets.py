@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-import pickle
 import sqlite3
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
@@ -9,7 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 import functions
 
-# folders
+# define folders
 DATA_FOLDER = "data"
 INPUT_FOLDER = os.path.join(DATA_FOLDER, "external")
 OUTPUT_FOLDER = os.path.join(DATA_FOLDER, "processed")
@@ -18,7 +17,7 @@ CONCRETENESS_FOLDER = os.path.join(INPUT_FOLDER, "affective_norms")
 CONCRETENESS_FOLDER_ENG = os.path.join(INPUT_FOLDER, "concreteness_ratings_eng")
 MILLION_POSTS_FOLDER = os.path.join(INPUT_FOLDER, "million_post_corpus")
 
-# filenames
+# define filenames
 CORPUSDB = "corpus.sqlite3"
 CONCRETENESS_FILE = "affective_norms.txt"
 CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"

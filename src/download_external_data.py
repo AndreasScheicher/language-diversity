@@ -4,13 +4,14 @@ import zipfile
 import tarfile
 import gzip
 
-
+# define folders
 DATA_FOLDER = os.path.join("data", "external")
 EMBEDDINGS_FOLDER = os.path.join(DATA_FOLDER, "embeddings")
 AFFECTIVE_NORMS_GER_FOLDER = os.path.join(DATA_FOLDER, "affective_norms")
 CORPUS_HISTORICAL_AM_ENG = os.path.join(DATA_FOLDER, "historical_american_english")
 CONCRETENESS_RATINGS_ENG = os.path.join(DATA_FOLDER, "concreteness_ratings_en")
 
+# define urls and files for download
 EMBEDDINGS_URL = "http://snap.stanford.edu/historical_embeddings/"
 MILLION_POST_CORPUS_URL = "https://github.com/OFAI/million-post-corpus/releases/download/v1.0.0/"
 MILLION_POST_CORPUS_FILE = "million_post_corpus.tar.bz2"
