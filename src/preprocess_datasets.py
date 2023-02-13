@@ -1,7 +1,7 @@
 import os
+import sqlite3
 import numpy as np
 import pandas as pd
-import sqlite3
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -24,9 +24,15 @@ CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
 CONCRETENESS_PICKLE_ENG = "concreteness_eng.pkl"
 
 
-def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENESS_FILE, output = OUTPUT_FOLDER, all_lower_case = True):
+def process_ger_concreteness(
+    folder = CONCRETENESS_FOLDER,
+    filename = CONCRETENESS_FILE,
+    output = OUTPUT_FOLDER,
+    all_lower_case = True
+):
     """
-    This function processes a German concreteness ratings file, converts the words to lower case (if specified), and saves the processed file as a pickle.
+    This function processes a German concreteness ratings file,
+    converts the words to lower case (if specified), and saves the processed file as a pickle.
 
     Inputs:
         folder: the directory where the concreteness ratings file is stored
@@ -51,10 +57,12 @@ def process_ger_concreteness(folder = CONCRETENESS_FOLDER, filename = CONCRETENE
 
 def get_all_text_from_article(row):
     """
-    This function joins texts from headline, secondary headline, and paragraphs and returns it as a single string.
+    This function joins texts from headline, secondary headline,
+    and paragraphs and returns it as a single string.
 
     Inputs:
-        row: a row of article data containing the article's title, body, and any other relevant information
+        row: a row of article data containing the article's title, body,
+            and any other relevant information
 
     Output: a string containing the text of the article
     """
@@ -65,23 +73,27 @@ def get_all_text_from_article(row):
     # some articles don't contain h2
     try:
         headline2 = soup.find('h2').text
-    except:
+    except AttributeError:
         headline2 = ""
-    
+
     # get the text from all 'p' tags in the article body
     paragraphs = [paragraph.text for paragraph in soup.find_all('p')]
-    
+
     # join the headline, headline2, and all paragraphs into a single string
     joined_article_text = ' '.join([ headline, headline2, *paragraphs ])
 
     return joined_article_text.lower()
 
 
-def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, output_folder=OUTPUT_FOLDER):
+def process_non_conformity(
+    folder=MILLION_POSTS_FOLDER,
+    database = CORPUSDB,
+    output_folder=OUTPUT_FOLDER
+):
     """
     Processes data from the Posts and Articles tables in the provided Million Posts database,
-    joins the text from all posts and articles, creates the ratio of word frequencies in posts and articles
-    and saves the processed data to a pickle file.
+    joins the text from all posts and articles, creates the ratio of word frequencies in posts
+    and articles and saves the processed data to a pickle file.
     This ratio is supposed to be used as a proxy for the word use in non-conform contexts.
 
     Args:
@@ -103,37 +115,47 @@ def process_non_conformity(folder=MILLION_POSTS_FOLDER, database = CORPUSDB, out
     joined_posts = ' '.join(posts["head_body"])
     # convert to lower case and remove newline characters
     joined_posts = joined_posts.lower().replace('\r\n', ' ')
-    
-    # get all text from each article 
-    articles['text'] = articles.apply(lambda row: get_all_text_from_article(row), axis=1)
+
+    # get all text from each article
+    articles['text'] = articles.apply(get_all_text_from_article, axis=1)
     # join all articles
     joined_articles = ' '.join(articles['text'])
 
     # use the words from the embeddings as vocabulary
     vocabulary = functions.get_vocab_from_embeddings()
-    
+
     # get word frequencies of posts and articles
     texts = [joined_posts, joined_articles]
-    cv = CountVectorizer(vocabulary=vocabulary)
-    cv_fit = cv.fit_transform(texts)
+    count_vec = CountVectorizer(vocabulary=vocabulary)
+    count_matrix = count_vec.fit_transform(texts)
 
     # scipy csr matrix to numpy array
-    freq = cv_fit.todense()
+    freq = count_matrix.todense()
 
     # log of freqency ratio
-    non_conf = pd.DataFrame(np.array(np.log(freq[0] / freq[1]))[0], index=vocabulary, columns=['non-conformity'])
+    non_conf = pd.DataFrame(
+        np.array(np.log(freq[0] / freq[1]))[0],
+        index=vocabulary,
+        columns=['non-conformity']
+    )
 
     # drop na and inf
     with pd.option_context('mode.use_inf_as_na', True):
         non_conf.dropna(inplace=True)
 
     non_conf.to_pickle(output_file)
-    
 
-def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTPUT_FOLDER, language = 'ger',
-                                 vocabulary = None, verbose = False, percentile=90):
+
+def get_polysemy_score_evolution(
+    start_year = 1950,
+    end_year = 1990,
+    folder=OUTPUT_FOLDER,
+    language = 'ger',
+    vocabulary = None, verbose = False, percentile=90
+):
     """
-    Calculate the clustering coefficients for words in a given range of years, and save the results to a pickle.
+    Calculate the clustering coefficients for words in a given range of years,
+    and save the results to a pickle.
 
     This function performs the following steps for each decade in the specified range:
         1. Loads the matrix and vocabulary for the current decade
@@ -151,7 +173,7 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
     """
     # define the output file path
     output_file = os.path.join(folder, f'polysemy_score_years_{language}.pkl')
-    
+
     embeddings_list = {
         "eng": os.path.join("eng-all_sgns", "sgns"),
         "fra": "fre-all_sgns",
@@ -160,32 +182,43 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
 
     # iterate the years
     for year in range(start_year, end_year+10, 10):
-        if verbose: print("Year:", year)
+        if verbose:
+            print("Year:", year)
         # Load the matrix and vocabulary for the current year
         mat = functions.load_mat(year, language_folder=embeddings_list[language])
         vocab = functions.load_vocab(year, language_folder=embeddings_list[language])
-        # Check the ratio of non-zero vectors in the matrix for understanding the sparsity of the data
-        if verbose: print("Ratio of non-zero vectors:", functions.check_sparcity(mat))
-        # Reduce the matrix and vocabulary to remove empty words (that have a zero vector in the matrix)
+        # Check the ratio of non-zero vectors in the matrix
+        if verbose:
+            print("Ratio of non-zero vectors:", functions.check_sparcity(mat))
+        # Remove zero vectors from matrix
         reduced_mat, reduced_vocab = functions.remove_empty_words(mat, vocab)
 
         if vocabulary is not None:
-            reduced_mat, reduced_vocab = functions.reduce_to_list_of_words(reduced_mat, reduced_vocab, vocabulary)
+            reduced_mat, reduced_vocab = functions.reduce_to_list_of_words(
+                reduced_mat, reduced_vocab, vocabulary
+                )
         # Calculate the cosine similarity between all word-vectors in the reduced matrix
         cos_sim = cosine_similarity(reduced_mat)
         # Calculate the clustering coefficient for each word in the reduced vocabulary
-        transitivities = functions.get_clustering_coefficient(cos_sim, reduced_mat, verbose=verbose, percentile=percentile)
+        transitivities = functions.get_clustering_coefficient(cos_sim, verbose, percentile)
         # get polysemy as 1 - transitivity
         polysemy_score = [1 - transitivity for transitivity in transitivities]
         # Create a DataFrame that holds the clustering coefficients for each year
-        current_polysemy_score = pd.DataFrame(data=polysemy_score, index=reduced_vocab, columns=[f"polysemy_score_{year}"])
+        current_polysemy_score = pd.DataFrame(
+            data=polysemy_score, index=reduced_vocab, columns=[f"polysemy_score_{year}"]
+            )
 
         # If a DataFrame for the clustering coefficients over the years already exists,
         # merge the current year's clustering coefficients with the existing DataFrame.
         # Otherwise, create a new DataFrame with the current year's clustering coefficients.
         if 'polysemy_score_years' in locals():
-            polysemy_score_years = pd.merge(left=polysemy_score_years, right=current_polysemy_score, 
-                                              left_index=True, right_index=True, how='inner')
+            polysemy_score_years = pd.merge(
+                left=polysemy_score_years,
+                right=current_polysemy_score,
+                left_index=True,
+                right_index=True,
+                how='inner'
+                )
         else:
             polysemy_score_years = current_polysemy_score
 
@@ -193,9 +226,13 @@ def get_polysemy_score_evolution(start_year = 1950, end_year = 1990, folder=OUTP
     polysemy_score_years.to_pickle(output_file)
 
 
-def get_polysemy_score_evolution_eng(start_year = 1960, end_year = 2000, folder = OUTPUT_FOLDER, input_folder = INPUT_FOLDER,
-                                     concreteness_filename = CONCRETENESS_PICKLE_ENG, verbose = False, percentile=90):
-
+def get_polysemy_score_evolution_eng(
+    start_year = 1960,
+    end_year = 2000,
+    folder = OUTPUT_FOLDER,
+    input_folder = INPUT_FOLDER,
+    concreteness_filename = CONCRETENESS_PICKLE_ENG, verbose = False, percentile=90
+):
     # define the output file path
     output_file = os.path.join(folder, 'polysemy_score_years_eng.pkl')
 
@@ -207,30 +244,43 @@ def get_polysemy_score_evolution_eng(start_year = 1960, end_year = 2000, folder 
 
         # read embeddings of year
         file = os.path.join(input_folder, 'historical_american_english', f'{year}.txt')
-        df = pd.read_csv(file, skiprows=1, sep=' ', header=None, index_col=0)
-        df.index = df.index.str.split('_').str[0]
+        embeddings = pd.read_csv(file, skiprows=1, sep=' ', header=None, index_col=0)
+        embeddings.index = embeddings.index.str.split('_').str[0]
         # filter for words in concreteness
-        df = df[df.index.isin(concreteness.index)]
+        embeddings = embeddings[embeddings.index.isin(concreteness.index)]
         # remove duplicates
-        df = df[~df.index.duplicated(keep='first')]
+        embeddings = embeddings[~embeddings.index.duplicated(keep='first')]
         # get polysemy score from cosine similarity
-        cos_sim = cosine_similarity(df)
-        transitivities = functions.get_clustering_coefficient(cos_sim, df.index, verbose=verbose, percentile=percentile)
+        cos_sim = cosine_similarity(embeddings)
+        transitivities = functions.get_clustering_coefficient(cos_sim, verbose, percentile)
         polysemy_score = [1 - transitivity for transitivity in transitivities]
         # create dataframe from polysemy score
-        current_polysemy_score = pd.DataFrame(data=polysemy_score, index=df.index, columns=[f'polysemy_score_{year}'])
+        current_polysemy_score = pd.DataFrame(
+            data=polysemy_score,
+            index=embeddings.index,
+            columns=[f'polysemy_score_{year}']
+        )
         # add current result to dataframe
         if 'polysemy_score_years_eng' in locals():
-            polysemy_score_years_eng = pd.merge(left=polysemy_score_years_eng, right=current_polysemy_score, 
-                                              left_index=True, right_index=True, how='inner')
+            polysemy_score_years_eng = pd.merge(
+                left=polysemy_score_years_eng,
+                right=current_polysemy_score,
+                left_index=True,
+                right_index=True,
+                how='inner'
+            )
         else:
             polysemy_score_years_eng = current_polysemy_score
     # save result to pickle
     polysemy_score_years_eng.to_pickle(output_file)
 
 
-def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRETENESS_FILE_ENG, 
-                             output = OUTPUT_FOLDER, output_filename = CONCRETENESS_PICKLE_ENG):
+def process_eng_concreteness(
+    folder = CONCRETENESS_FOLDER_ENG,
+    filename = CONCRETENESS_FILE_ENG,
+    output = OUTPUT_FOLDER,
+    output_filename = CONCRETENESS_PICKLE_ENG
+):
 
     # create the path to the output file and to the concreteness ratings file
     output_file = os.path.join(output, output_filename)
@@ -238,13 +288,13 @@ def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRE
 
     concreteness = pd.read_csv(input_file, sep='\t', index_col='Word')
 
-    # lower amount of 
+    # lower amount of
     concreteness = concreteness[concreteness['Percent_known'] == 1]
-    
+
     # filter type of words
-    Dom_Pos = ['Noun', 'Adjective', 'Verb', 'Adverb']
-    concreteness = concreteness[concreteness['Dom_Pos'].isin(Dom_Pos)]
-    
+    dom_pos = ['Noun', 'Adjective', 'Verb', 'Adverb']
+    concreteness = concreteness[concreteness['Dom_Pos'].isin(dom_pos)]
+
     # remove bigrams
     concreteness = concreteness[concreteness['Bigram'] == 0]
 
@@ -252,11 +302,14 @@ def process_eng_concreteness(folder = CONCRETENESS_FOLDER_ENG, filename = CONCRE
     concreteness[['concreteness']].to_pickle(output_file)
 
 if __name__ == "__main__":
-    process_ger_concreteness()
-    #process_non_conformity()
+    #process_ger_concreteness()
+    process_non_conformity()
     #get_polysemy_score_evolution(percentile=80, verbose=True)
-    #get_polysemy_score_evolution(language='eng', percentile=90, verbose=True, 
-    #                             vocabulary=pd.read_pickle(os.path.join('data', 'processed', 'concreteness_eng.pkl')).index)
+    #get_polysemy_score_evolution(
+    #   language='eng',
+    #   percentile=90,
+    #   verbose=True,
+    #   vocabulary=pd.read_pickle(os.path.join('data', 'processed', 'concreteness_eng.pkl')).index
+    #   )
     #get_polysemy_score_evolution_eng(percentile=90)
     #process_eng_concreteness()
-    pass

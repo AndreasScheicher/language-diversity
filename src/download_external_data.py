@@ -1,8 +1,8 @@
 import os
-import wget
 import zipfile
 import tarfile
 import gzip
+import wget
 
 # define folders
 DATA_FOLDER = os.path.join("data", "external")
@@ -19,18 +19,20 @@ AFFECTIVE_NORMS_GER_URL = "https://www.ims.uni-stuttgart.de/documents/ressourcen
 AFFECTIVE_NORMS_GER_FILE = "affective_norms.txt.gz"
 CORPUS_HISTORICAL_AM_ENG_URL = "http://vectors.nlpl.eu/repository/20/"
 CORPUS_HISTORICAL_AM_ENG_FILE = "188.zip"
-CONCRETENESS_RATINGS_ENG_URL = "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+CONCRETENESS_ENG_URL = "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt"
 
 
-def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBEDDINGS_URL, languages = 'DE'):
+def download_embeddings(folder=EMBEDDINGS_FOLDER, url=EMBEDDINGS_URL, languages = 'DE'):
     """
-    Downloads the specified language's pre-trained word embeddings from EMBEDDINGS_URL and saves them to 
-    the specified EMBEDDINGS_FOLDER.
+    Downloads the specified language's pre-trained word embeddings from EMBEDDINGS_URL and saves
+    them to the specified EMBEDDINGS_FOLDER.
 
     Parameters:
-        EMBEDDINGS_FOLDER (str): The path to the folder where the downloaded word embeddings will be saved.
+        EMBEDDINGS_FOLDER (str): The path to the folder where the downloaded word embeddings
+            will be saved.
         EMBEDDINGS_URL (str): The URL where the word embeddings are hosted.
-        languages (str or list): A string or list of strings indicating which language's word embeddings to download.
+        languages (str or list): A string or list of strings indicating which language's word
+            embeddings to download.
     """
 
     # Define a dictionary mapping language codes to folder names
@@ -47,24 +49,28 @@ def download_embeddings(EMBEDDINGS_FOLDER=EMBEDDINGS_FOLDER, EMBEDDINGS_URL=EMBE
     # Iterate over the list of languages
     for language in languages:
         # Create a subfolder for the language if it doesn't already exist
-        embeddings_sub_folder = os.path.join(EMBEDDINGS_FOLDER, embeddings_list[language])
+        embeddings_sub_folder = os.path.join(folder, embeddings_list[language])
         if not os.path.exists(embeddings_sub_folder):
             os.makedirs(embeddings_sub_folder)
-        
+
         # Download the zip file for the language
         embedding_zip = embeddings_list[language] + ".zip"
-        wget.download(EMBEDDINGS_URL + embedding_zip)
-        
+        wget.download(url + embedding_zip)
+
         # Extract the files from the zip file to the subfolder
         with zipfile.ZipFile(embedding_zip, 'r') as zip_ref:
             zip_ref.extractall(embeddings_sub_folder)
-        
+
         # Delete the zip file
         os.remove(embedding_zip)
 
 
 
-def download_million_post_corpus(folder=DATA_FOLDER, url=MILLION_POST_CORPUS_URL, file=MILLION_POST_CORPUS_FILE):
+def download_million_post_corpus(
+    folder=DATA_FOLDER,
+    url=MILLION_POST_CORPUS_URL,
+    file=MILLION_POST_CORPUS_FILE
+):
     """
     Downloads the Million Post Corpus and extracts it to the specified folder.
 
@@ -89,8 +95,14 @@ def download_million_post_corpus(folder=DATA_FOLDER, url=MILLION_POST_CORPUS_URL
     os.remove(file)
 
 
-def download_affective_norms_ger(folder=AFFECTIVE_NORMS_GER_FOLDER, url=AFFECTIVE_NORMS_GER_URL, file=AFFECTIVE_NORMS_GER_FILE):
-    """Downloads a file from a specified URL, unzips it, and saves it to a specified folder on the local filesystem.
+def download_affective_norms_ger(
+    folder=AFFECTIVE_NORMS_GER_FOLDER,
+    url=AFFECTIVE_NORMS_GER_URL,
+    file_path=AFFECTIVE_NORMS_GER_FILE
+):
+    """
+    Downloads a file from a specified URL, unzips it, and saves it to a specified
+    folder on the local filesystem.
 
     Args:
         folder: The local directory where the downloaded file should be saved.
@@ -105,23 +117,27 @@ def download_affective_norms_ger(folder=AFFECTIVE_NORMS_GER_FOLDER, url=AFFECTIV
         os.makedirs(folder)
 
     # Download the file using the wget module
-    wget.download(url + file, file)
+    wget.download(url + file_path, file_path)
 
     # Specify the output file name
-    output_file = os.path.join(folder, file.rstrip('.gz'))
+    output_file = os.path.join(folder, file_path.rstrip('.gz'))
 
     # Open the downloaded file with the gzip module
-    with gzip.open(file, 'rb') as f:
+    with gzip.open(file_path, 'rb') as file:
         # Open the output file in write binary mode
         with open(output_file, 'wb') as out:
             # Write the unzipped file to the output file
-            out.write(f.read())
+            out.write(file.read())
 
     # Remove the original zipped file
-    os.remove(file)
+    os.remove(file_path)
 
 
-def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_ENG, url=CORPUS_HISTORICAL_AM_ENG_URL, file=CORPUS_HISTORICAL_AM_ENG_FILE):
+def download_corpus_historical_american_english(
+    folder=CORPUS_HISTORICAL_AM_ENG,
+    url=CORPUS_HISTORICAL_AM_ENG_URL,
+    file=CORPUS_HISTORICAL_AM_ENG_FILE
+):
     # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -132,12 +148,12 @@ def download_corpus_historical_american_english(folder=CORPUS_HISTORICAL_AM_ENG,
     # Extract the files from the zip file to the subfolder
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(folder)
-        
+
     # Delete the zip file
     os.remove(file)
 
 
-def download_concreteness_eng(folder=CONCRETENESS_RATINGS_ENG, url=CONCRETENESS_RATINGS_ENG_URL):
+def download_concreteness_eng(folder=CONCRETENESS_RATINGS_ENG, url=CONCRETENESS_ENG_URL):
     # Check if the specified folder exists and create it if necessary
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -152,4 +168,3 @@ if __name__ == "__main__":
     #download_affective_norms_ger()
     #download_corpus_historical_american_english()
     #download_concreteness_eng()
-    pass
