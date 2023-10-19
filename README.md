@@ -1,2 +1,3 @@
-# language-diversity
-Data Science Project about the evolution of linguistic diversity
+# Evolution of language diversity
+
+This project investigates the connection of word polysemy evolution and perceived word concreteness
