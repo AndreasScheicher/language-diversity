@@ -1,3 +1,9 @@
+# data folder and it's content due to large file sizes
+data/
+*.txt
+*.tmp
+*.sqlite3
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -128,8 +134,3 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# data folder
-/data
-*.txt
-*.tmp
-*.sqlite3
