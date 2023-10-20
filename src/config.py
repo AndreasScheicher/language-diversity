@@ -27,3 +27,13 @@ EMBEDDINGS_NAMES = {
     "french": "fre-all_sgns",
     "german": "ger-all_sgns"
 }
+
+
+# archived
+CONCRETENESS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "affective_norms")
+CONCRETENESS_FILE = "affective_norms.txt"
+CONCRETENESS_FOLDER_ENG = os.path.join(EXTERNAL_DATA_DIR, "concreteness_ratings_eng")
+CONCRETENESS_PICKLE_ENG = "concreteness_eng.pkl"
+CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+MILLION_POSTS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "million_post_corpus")
+CORPUSDB = "corpus.sqlite3"
