@@ -40,7 +40,7 @@ def main(languages, force_download=False, force_process=False):
 
         if not os.path.exists(embeddings_lang_dir) or force_download:
             print(f"Downloading data for {language}...")
-            download.download_embeddings(language)
+            download.download_hist_embeddings(language)
 
         """
         if not os.path.exists(os.path.join(config.PROCESSED_DATA_DIR, f"{language}_processed.ext")) or force_process:
