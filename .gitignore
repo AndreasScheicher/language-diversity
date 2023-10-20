@@ -3,6 +3,8 @@ data/
 *.txt
 *.tmp
 *.sqlite3
+# archive folder for code of old version
+archive
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
