@@ -1,48 +1,53 @@
-"""Download all data sets necessary for the project."""
-
 import os
 
-import zipfile
 import wget
 
 from src import config
 
-def download_hist_embeddings(languages = 'english',
-        folder=config.EMBEDDINGS_DIR, url=config.EMBEDDINGS_URL,
-        embeddings_names=config.EMBEDDINGS_NAMES):
-    """Download the pre-trained word embeddings.
 
-    Parameters:
-    folder (str): The folder where the word embeddings will be saved.
-    url (str): The URL where the word embeddings are hosted.
-    languages (str or list): The language(s) which will be downloaded.
-    """
 
-    # Convert the input language codes to a list if it is a string
-    if isinstance(languages, str):
-        languages = [languages]
+def download_dataset(folder, filename, description, url, force_download):
+    file_path = os.path.join(folder, filename)
+    
+    # only download of file doesn't exist or if force-download flag
+    if not os.path.exists(file_path) or force_download:
+        print(f"Downloading {description}")
+        
+        # create the subfolder if it doesn't exist
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
-    for language in languages:
-        # Create a subfolder for the language if it doesn't already exist
-        embeddings_lang_dir = os.path.join(folder, language)
-        if not os.path.exists(embeddings_lang_dir):
-            os.makedirs(embeddings_lang_dir)
+        # download file/archive
+        wget.download(url=url + filename, out=folder)
 
-        # Download the zip file
-        embedding_zip = f"{embeddings_names[language]}.zip"
-        wget.download(url + embedding_zip)
+    else:
+        print(f"{description} already exist")
 
-        # Extract the files from the zip file to the subfolder
-        with zipfile.ZipFile(embedding_zip, 'r') as zip_ref:
-            zip_ref.extractall(embeddings_lang_dir)
 
-        # Delete the zip file
-        os.remove(embedding_zip)
+def download_all_files_for_language(language, folder, force_download=False):
+    # historic embeddings
+    download_dataset(
+        folder=folder,
+        filename=f"{config.HIST_EMBEDDINGS_NAMES[language]}.zip",
+        description="Historic Embeddings",
+        url=config.HIST_EMBEDDINGS_URL,
+        force_download=force_download
+    )
 
-def download_contemp_embeddings():
-    # get embeddings from here: http://vectors.nlpl.eu/repository/
-    pass
+    # contemporary embeddings
+    download_dataset(
+        folder=folder,
+        filename=f"{config.CONTEMP_EMBEDDINGS_IDS[language]}.zip",
+        description="Contemporary Embeddings",
+        url=config.CONTEMP_EMBEDDINGS_URL,
+        force_download=force_download
+    )
 
-def download_concreteness_ratins():
-    # get concreteness ratings from here: https://github.com/billdthompson/cogsci-auto-norm
-    pass
+    # concreteness ratings
+    download_dataset(
+        folder=folder,
+        filename=config.CONCRETENESS_FILENAMES[language],
+        description="Concreteness Ratings",
+        url=config.CONCRETENESS_URLS[language],
+        force_download=force_download
+    )
