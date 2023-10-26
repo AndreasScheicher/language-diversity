@@ -3,6 +3,7 @@ import os
 DATA_DIR = "data"
 EXTERNAL_DATA_DIR = os.path.join(DATA_DIR, "external")
 PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
+FIGURES_DIR = "figures"
 
 # define directories
 #HIST_EMBEDDINGS_DIR = os.path.join(EXTERNAL_DATA_DIR, "hist_embeddings")
