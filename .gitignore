@@ -1,8 +1,6 @@
 # data folder and it's content due to large file sizes
 data/
-*.txt
-*.tmp
-*.sqlite3
+
 # archive folder for code of old version
 archive
 
