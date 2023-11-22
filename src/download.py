@@ -1,6 +1,5 @@
 import os
-
-import wget
+import urllib.request
 
 from src import config
 
@@ -18,13 +17,14 @@ def download_dataset(folder, filename, description, url, force_download):
             os.makedirs(folder)
 
         # download file/archive
-        wget.download(url=url + filename, out=folder)
+        urllib.request.urlretrieve(url + filename, file_path)
 
     else:
-        print(f"{description} already exist")
+        print(f"{description} already exists")
 
 
 def download_all_files_for_language(language, folder, force_download=False):
+    
     # historic embeddings
     download_dataset(
         folder=folder,
@@ -49,5 +49,14 @@ def download_all_files_for_language(language, folder, force_download=False):
         filename=config.CONCRETENESS_FILENAMES[language],
         description="Concreteness Ratings",
         url=config.CONCRETENESS_URLS[language],
+        force_download=force_download
+    )
+    
+    # word frequencies
+    download_dataset(
+        folder=folder,
+        filename=config.FREQUENCY_FILENAMES[language],
+        description="Word Frequencies",
+        url=config.FREQUENCY_URLS[language],
         force_download=force_download
     )

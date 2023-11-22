@@ -39,16 +39,29 @@ CONTEMP_EMBEDDINGS_IDS = {
     "german": "45"
 }
 
+# todo: change german concretess to Wartena-Paper
 CONCRETENESS_FILENAMES = {
     "english": "Concreteness_ratings_Brysbaert_et_al_BRM.txt",
-    "french": None,
-    "german": "affective_norms.txt.gz"
+    "french": "13428_2018_1014_MOESM3_ESM.xlsx",
+    "german": "MergedConcreteness.csv" #"affective_norms.txt.gz"
 }
 
 CONCRETENESS_URLS = {
     "english": "http://crr.ugent.be/papers/",
-    "french": None,
+    "french": "https://static-content.springer.com/esm/art%3A10.3758%2Fs13428-018-1014-y/MediaObjects/",
     "german": "https://www.ims.uni-stuttgart.de/documents/ressourcen/experiment-daten/"
+}
+
+FREQUENCY_FILENAMES = {
+    "english": "Subtlex US_.rar", # "Subtlex%20US.rar",
+    "french": "Lexique383.zip",
+    "german": "SUBTLEX-DE_txt_cleaned_with_Google00.zip"
+}
+
+FREQUENCY_URLS = {
+    "english": "https://web.archive.org/web/20160323233749/http://subtlexus.lexique.org/corpus/",
+    "french": "http://www.lexique.org/databases/Lexique383/",
+    "german": "http://crr.ugent.be/subtlex-de/"
 }
 
 
@@ -56,10 +69,10 @@ CONCRETENESS_URLS = {
 
 
 # archived
-CONCRETENESS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "affective_norms")
-CONCRETENESS_FILE = "affective_norms.txt"
-CONCRETENESS_FOLDER_ENG = os.path.join(EXTERNAL_DATA_DIR, "concreteness_ratings_eng")
-CONCRETENESS_PICKLE_ENG = "concreteness_eng.pkl"
-CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
-MILLION_POSTS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "million_post_corpus")
-CORPUSDB = "corpus.sqlite3"
+#CONCRETENESS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "affective_norms")
+#CONCRETENESS_FILE = "affective_norms.txt"
+#CONCRETENESS_FOLDER_ENG = os.path.join(EXTERNAL_DATA_DIR, "concreteness_ratings_eng")
+#CONCRETENESS_PICKLE_ENG = "concreteness_eng.pkl"
+#CONCRETENESS_FILE_ENG = "Concreteness_ratings_Brysbaert_et_al_BRM.txt"
+#MILLION_POSTS_FOLDER = os.path.join(EXTERNAL_DATA_DIR, "million_post_corpus")
+#CORPUSDB = "corpus.sqlite3"

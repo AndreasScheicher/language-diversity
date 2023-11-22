@@ -1,0 +1,3 @@
+- eventuell cutoff für clustering anders definieren:
+    fixer wert statt percentile
+    oder wortzahl vorm clustern normieren

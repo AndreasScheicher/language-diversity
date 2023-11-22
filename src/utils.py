@@ -161,7 +161,8 @@ def load_contemp(archive, max_word_length=100):
             if len(word) > max_word_length:  # skip words longer than max_word_length
                 continue
             # count lines
-            num_rows += 1
+            if num_cols == len(parts) - 1:
+                num_rows += 1
 
     # initialize empty arrays
     vocab = np.empty(num_rows, dtype=f'<U{max_word_length}')
@@ -178,7 +179,8 @@ def load_contemp(archive, max_word_length=100):
             word = parts[0]
             if len(word) > max_word_length:
                 continue
-            
+            if num_cols != len(parts) - 1:
+                continue
             vocab[current_row] = word
             mat[current_row] = np.array(parts[1:], dtype=np.float32)
             current_row += 1
